@@ -180,6 +180,7 @@ class OpenTelemetryCppConan(ConanFile):
 
         tc.variables["BUILD_TESTING"] = False
         tc.variables["BUILD_BENCHMARK"] = False
+        tc.variables["OPENTELEMETRY_INSTALL"] = True
 
         tc.variables["WITH_NO_DEPRECATED_CODE"] = self.options.with_no_deprecated_code
         tc.variables["WITH_STL"] = self.options.with_stl
@@ -215,10 +216,16 @@ class OpenTelemetryCppConan(ConanFile):
                 protos_cmake_path,
                 "if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opentelemetry-proto/.git)",
                 "if(1)")
-        replace_in_file(self,
-            protos_cmake_path,
-            "set(PROTO_PATH \"${CMAKE_CURRENT_SOURCE_DIR}/third_party/opentelemetry-proto\")",
-            f"set(PROTO_PATH \"{protos_path}\")")
+        if Version(self.version) >= "1.8.3":
+            replace_in_file(self,
+                protos_cmake_path,
+                "set(PROTO_PATH\n        \"${CMAKE_CURRENT_SOURCE_DIR}/third_party/opentelemetry-proto\")",
+                f"set(PROTO_PATH\n       \"{protos_path}\")")
+        else:
+            replace_in_file(self,
+                protos_cmake_path,
+                "set(PROTO_PATH \"${CMAKE_CURRENT_SOURCE_DIR}/third_party/opentelemetry-proto\")",
+                f"set(PROTO_PATH \"{protos_path}\")")
         rmdir(self, os.path.join(self.source_folder, "api", "include", "opentelemetry", "nostd", "absl"))
 
         apply_conandata_patches(self)
